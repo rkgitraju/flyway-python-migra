@@ -143,14 +143,17 @@ def run_flyway_migration(script_path):
     
     try:
         # Execute the Maven command
-        subprocess.run(
+        result = subprocess.run(
             maven_command,
             cwd='/app',
             env=os.environ,
             check=True,
-            capture_output=True, # Captures both stdout and stderr
-            text=True,           # Decodes output to string
-            stderr=subprocess.STDOUT # CRITICAL: Merges stderr into stdout
+            
+            # --- CRITICAL FIX: Use PIPE/STDOUT directly, REMOVE capture_output=True ---
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT, 
+            text=True, 
+            # --------------------------------------------------------------------------
         )
         print("✅ Flyway migration SUCCESSFUL.")
         return True
