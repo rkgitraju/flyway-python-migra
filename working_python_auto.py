@@ -8,8 +8,8 @@ from datetime import datetime
 # --- Configuration (UPDATE THESE VALUES) ---
 # NOTE: Ensure the user/password/port match your Docker Compose setup.
 
-SOURCE_DB_URL = "postgresql://airflow:airflow@db1:5432/db1" 
-TARGET_DB_URL = "postgresql://airflow:airflow@db2:5432/db2"
+SOURCE_DB_URL = "postgresql://airflow:airflow@localhost:5432/db1" 
+TARGET_DB_URL = "postgresql://airflow:airflow@localhost:5432/db2"
 
 MIGRATION_DIR = "src/main/resources/db/migration/db2"
 TARGET_PROFILE = "db2-local"
@@ -70,7 +70,7 @@ def run_migra_and_generate_script():
             stdout=subprocess.PIPE,  # Capture stdout
             stderr=subprocess.STDOUT, # Merge stderr (UserWarning) into stdout
             text=True, 
-            # check=True is removed
+            check=True
         )
         
         # The result.stdout now contains both regular output and the warning lines.
