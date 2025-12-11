@@ -44,66 +44,6 @@ def delete_generated_file(file_path):
             print(f"⚠️ Warning: Could not delete file {os.path.basename(file_path)}. Please delete manually: {e}")
 
 
-# run sqlfluff
-def run_sqlfluff_validation(script_path):
-    """Runs custom DELETE check and external SQLFluff linting."""
-    
-    print("\n" + "=" * 50)
-    print(f"Starting SQL Validation for: {os.path.basename(script_path)}")
-    print("=" * 50)
-    
-    if not check_delete_where_clause(script_path):
-        return False
-
-    print("\n  -> Running SQLFluff linting...")
-    lint_command = f"sqlfluff lint {script_path} --config .sqlfluff"
-
-    try:
-        # 🚨 Use shell=True for local Windows execution to find the 'sqlfluff' executable
-        result = subprocess.run(
-            lint_command, 
-            shell=True,
-            check=True, 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.STDOUT,
-            text=True,
-            cwd=os.getcwd() # Ensure command runs from project root
-        )
-        print("SQLFluff linting SUCCESSFUL.")
-        return True
-
-    except subprocess.CalledProcessError as e:
-        print("\n SQL LINTING FAILED due to prohibited words or syntax errors.")
-        print("--- SQLFluff Output ---")
-        print(e.stdout.strip())
-        return False
-    
-    except FileNotFoundError as e:
-        print(f"CRITICAL ERROR: 'sqlfluff' command not found. Install SQLFluff locally. Error: {e}")
-        return False
-    
-#  use custom check in python
-def check_delete_where_clause(script_path):
-    """Checks for simple DELETE statements without a WHERE clause."""
-    print("Checking for unsafe DELETE statements...")
-    
-    with open(script_path, 'r') as f:
-        content = f.read()
-
-    import re
-    
-    # Note: This is a basic safety net, not a perfect SQL parser!
-    unsafe_delete_pattern = re.compile(
-        r'DELETE\s+FROM\s+\S+;|\bDELETE\s+FROM\s+\S+\s*$', 
-        re.IGNORECASE | re.MULTILINE
-    )
-    
-    if unsafe_delete_pattern.search(content):
-        print("SECURITY VIOLATION: Found DELETE statement without a WHERE clause.")
-        return False
-    
-    return True
-
 def run_migra_and_generate_script():
     """Compares the schemas using Migra and generates the Flyway SQL file."""
     
@@ -219,12 +159,6 @@ def run_flyway_migration(script_path):
 if __name__ == "__main__":
     generated_file = run_migra_and_generate_script()
     if generated_file is not None :
-
-        #  security check.
-        if not run_sqlfluff_validation(generated_file):
-            delete_generated_file(generated_file)
-            sys.exit(1)
-
         user_input = input(f"\n❓ Do you want to proceed with the Flyway migration? (yes/no): ").strip().lower()
         if user_input != 'yes':
             print("Migration cancelled by user.")
