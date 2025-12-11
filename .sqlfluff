@@ -1,0 +1,8 @@
+# .sqlfluff file content (in your project root)
+[sqlfluff]
+dialect = postgres
+rules = all
+[sqlfluff:rules:convention.blocked_words]
+unquoted_identifiers_case = lower # or upper, as long as it's defined and consistent
+# Now, if Migra generates 'drop table', it will match against 'DROP'
+blocked_words = DROP, TRUNCATE, DELETE_WITHOUT_WHERE
